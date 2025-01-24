@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pokecard/card/card_list_controller.dart';
-import 'package:pokecard/card/card.dart';
+import 'package:pokecard/mistery_packet/mistery_packet_list_controller.dart';
+import 'package:pokecard/mistery_packet/mistery_packet.dart';
 
-class CardListPage extends ConsumerWidget {
-  const CardListPage({super.key});
+class MisteryPacketListPage extends ConsumerWidget {
+  const MisteryPacketListPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cardListAsyncValue = ref.watch(cardListControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Cards')),
+      appBar: AppBar(title: const Text('Mistery packet')),
       body: Column(
         children: [
           Expanded(

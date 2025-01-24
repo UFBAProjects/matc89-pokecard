@@ -64,7 +64,7 @@ class CardListController extends StateNotifier<AsyncValue<List<PokeCard>>> {
         // Build PokeCard object
         cards.add(PokeCard(
           name: detailData['name'],
-          image: detailData['sprites']['back_default'] ?? '',
+          image: detailData['sprites']['front_default'] ?? '',
           type: (detailData['types'] as List)
               .map((t) => t['type']['name'] as String)
               .join(', '),
