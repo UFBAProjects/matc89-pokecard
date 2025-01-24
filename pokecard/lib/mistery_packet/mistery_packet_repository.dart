@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pokecard/card/card.dart';
+import 'package:pokecard/mistery_packet/mistery_packet.dart';
 
 class PokeCardRepository {
   final FirebaseFirestore _firestore;
