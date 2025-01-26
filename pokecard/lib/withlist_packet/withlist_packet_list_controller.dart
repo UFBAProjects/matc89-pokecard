@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pokecard/mistery_packet/wishlist_packet.dart';
-import 'package:pokecard/mistery_packet/wishlist_packet_repository.dart';
+import 'package:pokecard/withlist_packet/withlist_packet.dart';
+import 'package:pokecard/withlist_packet/withlist_packet_repository.dart';
 
 final WithlistCardListControllerProvider =
     StateNotifierProvider<WithlistCardListController, AsyncValue<List<WithlistCard>>>(

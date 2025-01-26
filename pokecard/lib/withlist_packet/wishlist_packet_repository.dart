@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:pokecard/mistery_packet/mistery_packet.dart';
+import 'package:pokecard/withlist_packet/withlist_packet.dart';
 
 class WithlistCardRepository {
   final FirebaseFirestore _firestore;
