@@ -8,6 +8,28 @@ class PokeDeckRepository {
 
   PokeDeckRepository(this._firestore);
 
+  Future<List<PokeCard>> getAllMyCards() async {
+    final collection = _firestore.collection('pokecards');
+
+    try {
+      final snapshot = await collection.get();
+      final decks = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return PokeCard(
+          name: data['name'] as String,
+          type: data['type'] as String,
+          weight: data['weight'] as int,
+          abilities: List<String>.from(data['abilities']),
+          image: data['image'] as String,
+          color: data['color'] as String,
+        );
+      }).toList();
+      return decks;
+    } catch (e) {
+      throw Exception('Erro ao buscar os decks: $e');
+    }
+  }
+
   Future<List<PokeDeck>> getAllDecks() async {
     final collection = _firestore.collection('pokeDecks');
 
@@ -57,11 +79,38 @@ class PokeDeckRepository {
   Future<void> addCardInDeck(String deckId, PokeCard card) async {
     final collection = _firestore.collection('pokeDecks');
     try {
-      print(deckId);
-      print(card.toJson());
-      //await collection.add({'name': deckName, 'cards': cards ?? []});
+      final deckDoc = collection.doc(deckId);
+
+      final snapshot = await deckDoc.get();
+      if (!snapshot.exists) {
+        throw Exception('Deck não encontrado com o ID $deckId');
+      }
+      final deckData = snapshot.data() as Map<String, dynamic>;
+      final List<dynamic> currentCards = deckData['cards'] ?? [];
+      final updatedCards = List.from(currentCards)..add(card.toJson());
+
+      await deckDoc.update({'cards': updatedCards});
     } catch (e) {
-      throw Exception('Erro ao salvar o card no deck: $e');
+      throw Exception('Erro ao adicionar a carta no deck: $e');
+    }
+  }
+
+  Future<void> deleteCardFromDeck(String deckId, int cardIndex) async {
+    final collection = _firestore.collection('pokeDecks');
+    try {
+      final snapshot = await collection.doc(deckId).get();
+      if (!snapshot.exists) {
+        throw Exception('Deck não encontrado');
+      }
+      final data = snapshot.data() as Map<String, dynamic>;
+      List<dynamic> cards = data['cards'];
+      if (cardIndex < 0 || cardIndex >= cards.length) {
+        throw Exception('Índice do card inválido');
+      }
+      cards.removeAt(cardIndex);
+      await collection.doc(deckId).update({'cards': cards});
+    } catch (e) {
+      throw Exception('Erro ao deletar o card do deck: $e');
     }
   }
 
