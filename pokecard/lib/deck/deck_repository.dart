@@ -8,6 +8,37 @@ class PokeDeckRepository {
 
   PokeDeckRepository(this._firestore);
 
+  Future<PokeDeck> getDeckById(String deckId) async {
+    final collection = _firestore.collection('pokeDecks');
+
+    try {
+      final docSnapshot = await collection.doc(deckId).get();
+
+      if (!docSnapshot.exists) {
+        throw Exception('Deck não encontrado!');
+      }
+
+      final data = docSnapshot.data()!;
+
+      return PokeDeck(
+        id: docSnapshot.id,
+        name: data['name'] as String,
+        cards: (data['cards'] as List<dynamic>).map((card) {
+          return PokeCard(
+            name: card['name'] as String,
+            type: card['type'] as String,
+            weight: card['weight'] as int,
+            abilities: List<String>.from(card['abilities']),
+            image: card['image'] as String,
+            color: card['color'] as String,
+          );
+        }).toList(),
+      );
+    } catch (e) {
+      throw Exception('Erro ao buscar o deck: $e');
+    }
+  }
+
   Future<List<PokeCard>> getAllMyCards() async {
     final collection = _firestore.collection('pokecards');
 

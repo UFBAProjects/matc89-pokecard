@@ -48,11 +48,9 @@ class DeckController extends StateNotifier<AsyncValue<List<PokeDeck>>> {
 
   Future<PokeDeck> getDeckById(String deckId) async {
     try {
-      final decks = await repository.getAllDecks();
-      state = AsyncValue.data(decks);
-      return decks[0];
+      final deck = await repository.getDeckById(deckId);
+      return deck;
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
       throw Exception('Failed to load decks: $e');
     }
   }
