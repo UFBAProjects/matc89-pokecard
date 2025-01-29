@@ -8,7 +8,7 @@ class WithlistCardRepository {
 
   Future<List<WithlistCard>> fetchWithlist() async {
     try{
-      final querySnapshot = await _firestore.collection('wishlist').get();
+      final querySnapshot = await _firestore.collection('Withlist').get();
       final withlist = querySnapshot.docs.map((doc){
         return WithlistCard.fromJson(doc.data()); 
       }).toList(); 

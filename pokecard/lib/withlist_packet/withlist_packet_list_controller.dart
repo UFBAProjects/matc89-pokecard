@@ -9,54 +9,55 @@ import 'package:pokecard/withlist_packet/withlist_packet_repository.dart';
 final WithlistCardListControllerProvider =
     StateNotifierProvider<WithlistCardListController, AsyncValue<List<WithlistCard>>>(
   (ref) => WithlistCardListController(
-   (FirebaseFirestore.instance),
+   WithlistCardRepository(FirebaseFirestore.instance),
   ),
 );
 
-class WithlistCardListController extends StateNotifier<AsyncValue<List<WishlistCard>>> {
+class WithlistCardListController extends StateNotifier<AsyncValue<List<WithlistCard>>> {
   final  WithlistCardRepository repository;
 
   WithlistCardListController(this.repository) : super(const AsyncValue.loading()) {
-    fetchWithlistCards();
+    fetchWithlist();
   }
 
   Future<void> fetchWithlist() async{
     try{
-      final withlist = await repository.fetchWithlistCards(); 
+      final withlist = await repository.fetchWithlist(); 
       state = AsyncValue.data(withlist); 
     }
-    catch(e){
-      state = AsyncValue.error(e);
+    catch(e, st){
+      state = AsyncValue.error(e, st);
     }
   }
-  Future<void> saveAllCardsWithlist(List<WishlistCard> cards) async{
+  Future<void> saveAllCardsWithlist(List<WithlistCard> cards) async{
     try{
       state = const AsyncValue.loading(); 
-      await WithlistCardRepository.saveAllCardsWithlist(cards); 
+      await repository.saveAllWithlistCard(cards); 
       await fetchWithlist(); 
     }
-    catch(e){
-      state = AsyncValue.error(e); 
+    catch(e, st){
+      state = AsyncValue.error(e, st); 
     }
   }
-  Future<void> addWithlistCard(WishlistCard card) async {
+  Future<void> addWithlistCard(WithlistCard card) async {
     try{
       state = const AsyncValue.loading(); 
-      await WithlistCardRepository.addCardWithlist(card);
+      await repository.addCardWithlist(card);
       await fetchWithlist(); 
     }
-    catch (e){
-      state = AsyncValue.error(e);
+    catch (e, st){
+      state = AsyncValue.error(e,st);
     }
   }
 
- Future<void> removeWithlistCard(String name){
+ Future<void> removeWithlistCard(String name)async{
     try{
       state = const AsyncValue.loading(); 
-      await WithlistCardRepository.removeCardWithlist(card);
+      await repository.removeCardWithlist(name);
       await fetchWithlist(); 
     }
-    catch (e){
-      state = AsyncValue.error(e);
+    catch (e, st){
+      state = AsyncValue.error(e, st);
     }
+}
 }
