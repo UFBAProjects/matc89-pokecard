@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokecard/deck/deck.dart';
 import 'package:pokecard/deck/deck_controller.dart';
+import 'package:pokecard/deck/pages/deck_add_card_page.dart';
+import 'package:pokecard/deck/pages/deck_list_card_page.dart';
 
 class DeckListPage extends ConsumerWidget {
   const DeckListPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final deckListAsyncValue = ref.watch(deckListControllerProvider);
+    final deckListAsyncValue = ref.watch(getAllDecksProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text('My Decks')),
@@ -46,32 +48,44 @@ class DeckListPage extends ConsumerWidget {
           return _addDeckButton(context, ref);
         }
         final deck = deckList[index - 1];
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.black, width: 2),
-          ),
-          margin: const EdgeInsets.all(8.0),
-          padding: const EdgeInsets.all(12.0),
-          child: Stack(
-            children: [
-              Center(
-                child: Text(
-                  deck.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+        return GestureDetector(
+            onTap: () {
+              // Navegar para a página do Deck
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DeckListCardsPage(
+                    deckId: deck.id,
                   ),
                 ),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.black, width: 2),
               ),
-              _deleteDeckButton(context, ref, deck.id),
-              _addCardButton(context, ref, deck.id),
-              _editDeckButton(context, ref, deck.id, deck.name),
-            ],
-          ),
-        );
+              margin: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(12.0),
+              child: Stack(
+                children: [
+                  Center(
+                    child: Text(
+                      deck.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  _deleteDeckButton(context, ref, deck.id),
+                  _addCardButton(context, ref, deck.id),
+                  _editDeckButton(context, ref, deck.id, deck.name),
+                ],
+              ),
+            ));
       },
     );
   }
@@ -125,19 +139,6 @@ class DeckListPage extends ConsumerWidget {
     );
   }
 
-  Widget _addCardButton(BuildContext context, WidgetRef ref, String deckId) {
-    return Positioned(
-      top: 2,
-      right: 32,
-      child: IconButton(
-        icon: Icon(Icons.add, color: Colors.green),
-        onPressed: () {
-          _showAddCardScreen(context, ref, deckId);
-        },
-      ),
-    );
-  }
-
   Widget _editDeckButton(
       BuildContext context, WidgetRef ref, String deckId, String currentName) {
     return Positioned(
@@ -147,6 +148,24 @@ class DeckListPage extends ConsumerWidget {
         icon: const Icon(Icons.edit, color: Colors.orange),
         onPressed: () {
           _showEditDeckModal(context, ref, deckId, currentName);
+        },
+      ),
+    );
+  }
+
+  Widget _addCardButton(BuildContext context, WidgetRef ref, String deckId) {
+    return Positioned(
+      top: 2,
+      right: 32,
+      child: IconButton(
+        icon: Icon(Icons.add, color: Colors.green),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DeckAddCardsPage(deckId: deckId),
+            ),
+          );
         },
       ),
     );
@@ -177,7 +196,7 @@ class DeckListPage extends ConsumerWidget {
                   final deckController =
                       ref.read(deckListControllerProvider.notifier);
                   await deckController.saveDeck(controller.text);
-                  await deckController.getAllDecks();
+                  ref.refresh(getAllDecksProvider);
                   Navigator.of(context).pop();
                 }
               },
@@ -188,8 +207,6 @@ class DeckListPage extends ConsumerWidget {
       },
     );
   }
-
-  void _showAddCardScreen(BuildContext context, WidgetRef ref, String deckId) {}
 
   void _showEditDeckModal(
       BuildContext context, WidgetRef ref, String deckId, String currentName) {
@@ -218,7 +235,7 @@ class DeckListPage extends ConsumerWidget {
                   final deckController =
                       ref.read(deckListControllerProvider.notifier);
                   await deckController.updateDeck(deckId, controller.text);
-                  await deckController.getAllDecks();
+                  ref.refresh(getAllDecksProvider);
                   Navigator.of(context).pop();
                 }
               },
@@ -250,7 +267,7 @@ class DeckListPage extends ConsumerWidget {
                 final deckController =
                     ref.read(deckListControllerProvider.notifier);
                 await deckController.deleteDeck(deckId);
-                await deckController.getAllDecks();
+                ref.refresh(getAllDecksProvider);
                 Navigator.of(context).pop();
               },
               child: const Text('Confirmar'),
