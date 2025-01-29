@@ -6,6 +6,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pokecard/mistery_packet/mistery_packet.dart';
 import 'package:pokecard/mistery_packet/mistery_packet_repository.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
+
+Future<String> getUserId() async {
+  final prefs = await SharedPreferences.getInstance();
+  String? userId = prefs.getString('user_id');
+
+  if (userId == null) {
+    userId = const Uuid().v4();
+    await prefs.setString('user_id', userId);
+  }
+
+  return userId;
+}
+
 final cardListControllerProvider =
     StateNotifierProvider<CardListController, AsyncValue<List<PokeCard>>>(
   (ref) => CardListController(
@@ -17,11 +32,47 @@ class CardListController extends StateNotifier<AsyncValue<List<PokeCard>>> {
   final PokeCardRepository repository;
 
   CardListController(this.repository) : super(const AsyncValue.loading()) {
-    fetchPokemonCards(); // Certifique-se de chamar o método ao inicializar
+    fetchPokemonCards(); 
+  }
+
+
+  Future <void> saveUserData() async {
+    final fireStore = FirebaseFirestore.instance;
+    final userId = await getUserId(); 
+    final userPokem = fireStore.collection('pokeUsers').doc(userId);
+  
+     final snapshot = await userPokem.get();
+
+    if (!snapshot.exists) {
+    final currentTime = DateTime.now().millisecondsSinceEpoch;
+
+      await userPokem.set({
+      'user_id': userId,
+      'created_at': currentTime, 
+    }, SetOptions(merge: true));
+  }
+  
+  
   }
 
   Future<void> fetchPokemonCards() async {
     try {
+     
+        final fireStore = FirebaseFirestore.instance;
+        final userId = await getUserId(); 
+        final userPokem = fireStore.collection('pokeUsers').doc(userId);
+
+
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
+
+    // here, I'm updting the last opening time
+      await userPokem.set({
+        'last_open_time': currentTime
+      }, SetOptions(merge: true));
+
+      print("salvando pokeuser no firebase");
+
+      
       state = const AsyncValue.loading();
       const generalEndpoint =
           'https://pokeapi.co/api/v2/pokemon/?offset=300&limit=300';
