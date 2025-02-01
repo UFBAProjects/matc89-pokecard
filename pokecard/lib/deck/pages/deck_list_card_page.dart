@@ -73,7 +73,7 @@ class DeckListCardsPage extends ConsumerWidget {
             },
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.2),
+                color: cardColor.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.black, width: 2),
               ),
@@ -119,7 +119,7 @@ class DeckListCardsPage extends ConsumerWidget {
                   ),
                   Positioned(
                     top: 8,
-                    right: 8, 
+                    right: 8,
                     child: _deleteCardButton(context, ref, deckId, index, card),
                   )
                 ],
