@@ -1,7 +1,7 @@
 class WithlistCard {
   final String name;
   final String type;
-  final String weight;
+  final int weight;
   final List<String> abilities;
   final String image;
   final String color;
