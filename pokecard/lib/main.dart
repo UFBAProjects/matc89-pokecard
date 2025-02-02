@@ -34,8 +34,8 @@ class _HomePageState extends State<HomePage> {
 
   final List<Widget> _pages = <Widget>[
     PokeCardListPage(),
-    const DeckListPage(),
     const Placeholder(),
+    const DeckListPage(),
     const WithlistPacketListPage()
   ];
 
