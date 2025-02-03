@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokecard/collection.dart';
 import 'package:pokecard/collection/collection_list_page.dart';
 import 'package:pokecard/mistery_packet/mistery_packet_list_page.dart';
+import 'package:pokecard/withlist_packet/withlist_packet_list_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:pokecard/deck/pages/deck_list_page.dart';
@@ -32,10 +33,10 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = <Widget>[
-    const MisteryPacketListPage(),
     PokeCardListPage(),
-    const DeckListPage(),
     const Placeholder(),
+    const DeckListPage(),
+    const WithlistPacketListPage()
   ];
 
   void _onItemTapped(int index) {
