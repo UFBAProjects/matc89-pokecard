@@ -33,8 +33,8 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = <Widget>[
+    const MisteryPacketListPage(),
     PokeCardListPage(),
-    const Placeholder(),
     const DeckListPage(),
     const WithlistPacketListPage()
   ];
@@ -59,14 +59,17 @@ class _HomePageState extends State<HomePage> {
             label: 'Mistery Packet',
           ),
           BottomNavigationBarItem(
+            backgroundColor: Color.fromARGB(255, 129, 49, 76),
             icon: Icon(Icons.credit_card),
             label: 'Cards',
           ),
           BottomNavigationBarItem(
+            backgroundColor: Color.fromARGB(255, 129, 49, 76),
             icon: Icon(Icons.dashboard),
             label: 'Decks',
           ),
           BottomNavigationBarItem(
+            backgroundColor: Color.fromARGB(255, 129, 49, 76),
             icon: Icon(Icons.favorite),
             label: 'Whishlist',
           ),

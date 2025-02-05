@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokecard/mistery_packet/mistery_packet.dart';
+import 'package:pokecard/collection/collection_controller.dart';
 
-class PokeCardGrid extends StatelessWidget {
+class PokeCardGrid extends ConsumerWidget {
   final List<PokeCard> cardList;
 
   const PokeCardGrid({Key? key, required this.cardList}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isMobile = MediaQuery.of(context).size.width < 600;
     final crossAxisCount = isMobile ? 2 : 3;
 
@@ -21,8 +23,6 @@ class PokeCardGrid extends StatelessWidget {
       itemCount: cardList.length,
       itemBuilder: (context, index) {
         final card = cardList[index];
-
-        // Map Pokemon color to Flutter colors
         final colorMap = {
           'black': Colors.black,
           'blue': Colors.blue,
@@ -48,12 +48,17 @@ class PokeCardGrid extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                card.name,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+              GestureDetector(
+                onTap: () {
+                  _showEditDialog(context, card, index, ref);
+                },
+                child: Text(
+                  card.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -80,6 +85,40 @@ class PokeCardGrid extends StatelessWidget {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+  void _showEditDialog(BuildContext context, PokeCard card, int index, WidgetRef ref) {
+    final nameController = TextEditingController(text: card.name);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edite o nome do Pokemon'),
+          content: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(labelText: 'Novo Nome'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                final newName = nameController.text.trim();
+                if (newName.isNotEmpty) {
+                  ref.read(collectionControllerProvider.notifier).updateNameCard(card.name, newName);
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Salvar'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancelar'),
+            ),
+          ],
         );
       },
     );

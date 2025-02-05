@@ -28,4 +28,14 @@ class CollectionController extends StateNotifier<AsyncValue<List<PokeCard>>> {
       state = AsyncValue.error(e, st); // Caso ocorra erro, atualiza o estado com erro
     }
   }
+  Future<void> updateNameCard(String oldName, String newName) async {
+    try {
+      state = const AsyncValue.loading(); // Muda o estado para "loading"
+      await repository.updateCardName(oldName, newName); 
+      final cards = await repository.getAllCards(); // Recupera os cards do repositório
+      state = AsyncValue.data(cards); // Atualiza o estado com os cards
+    } catch (e, st) {
+      state = AsyncValue.error(e, st); // Caso ocorra erro, atualiza o estado com erro
+    }
+  }
 }
