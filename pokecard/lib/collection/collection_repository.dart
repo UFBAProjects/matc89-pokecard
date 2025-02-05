@@ -27,4 +27,21 @@ class CollectionRepository {
       throw Exception('Erro ao buscar os cards: $e');
     }
   }
+  Future<void> updateCardName(String oldName, String newName) async {
+  final collection = _firestore.collection('pokecards');
+
+  try {
+    final querySnapshot = await collection.where('name', isEqualTo: oldName).get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      await doc.reference.update({'name': newName});
+    } else {
+      throw Exception('Nenhum card encontrado com o nome $oldName');
+    }
+  } catch (e) {
+    throw Exception('Erro ao atualizar o nome do card: $e');
+  }
+}
+
 }
