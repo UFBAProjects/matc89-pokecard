@@ -3,60 +3,109 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokecard/mistery_packet/mistery_packet_list_controller.dart';
 import 'package:pokecard/mistery_packet/mistery_packet.dart';
 
-class MisteryPacketListPage extends ConsumerWidget {
+class MisteryPacketListPage extends ConsumerStatefulWidget {
   const MisteryPacketListPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MisteryPacketListPage> createState() => _MisteryPacketListPageState();
+}
+
+class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
+  bool isButtonEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPacketAvailability();
+  }
+
+  // check if is allowed open a new packet
+  Future<void> _checkPacketAvailability() async {
+    final controller = ref.read(cardListControllerProvider.notifier);
+    final canOpen = await controller.canOpenPacket();
+    setState(() {
+      isButtonEnabled = canOpen;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final cardListAsyncValue = ref.watch(cardListControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mistery packet')),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: cardListAsyncValue.when(
-                data: (cardList) => _buildList(context, cardList),
-                error: (error, stackTrace) => Text('Error: $error'),
-                loading: () => const CircularProgressIndicator(),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () async {
-                final controller =
-                    ref.read(cardListControllerProvider.notifier);
-                final cardList = ref.read(cardListControllerProvider);
+      appBar: AppBar(title: const Text('Mistery Packet')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: isButtonEnabled
+                    ? () async {
+                        final controller = ref.read(cardListControllerProvider.notifier);
 
-                if (cardList is AsyncData<List<PokeCard>>) {
-                  try {
-                    await controller.saveCards(cardList.value);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Pokémon cards salvos com sucesso!')),
-                    );
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Erro ao salvar os Pokémon cards.')),
+                        
+                        final canOpen = await controller.canOpenPacket();
+                        if (canOpen) {
+                          try {
+                            await controller.fetchPokemonCards(); 
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Pacote aberto com sucesso! Pokémons carregados.')),
+                            );
+                            
+                            setState(() {
+                              isButtonEnabled = false;
+                            });
+                            Future.delayed(const Duration(hours: 2), () {
+                              setState(() {
+                                isButtonEnabled = true;
+                              });
+                            });
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Erro ao abrir pacote: $e')),
+                            );
+                          }
+                        }
+                      }
+                    : () {
+                        
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Aguarde os 2 minutos de abrir outro pacote.')),
+                        );
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isButtonEnabled ? Colors.grey : Colors.white,
+                ),
+                child: const Text('Open New Packet'),
+              ),
+
+              const SizedBox(height: 20),
+
+              cardListAsyncValue.when(
+                data: (cardList) {
+                  if (cardList.isEmpty) {
+                    return const Text(
+                      'Nenhum Pokémon carregado. Clique no botão para abrir um novo pacote.',
+                      textAlign: TextAlign.center,
                     );
                   }
-                }
-              },
-              child: const Text('Save'),
-            ),
+                  return Expanded(child: _buildList(context, cardList));
+                },
+                loading: () => const CircularProgressIndicator(),
+                error: (error, stackTrace) => Text('Erro: $error'),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildList(BuildContext context, List<PokeCard> cardList) {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    final crossAxisCount = isMobile ? 2 : 3; // 2 cards por coluna no mobile
+    final crossAxisCount = isMobile ? 2 : 3;
 
     return GridView.builder(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -69,7 +118,6 @@ class MisteryPacketListPage extends ConsumerWidget {
       itemBuilder: (context, index) {
         final card = cardList[index];
 
-        // Map Pokémon color to Flutter colors
         final colorMap = {
           'black': Colors.black,
           'blue': Colors.blue,

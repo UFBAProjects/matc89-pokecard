@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pokecard/mistery_packet/mistery_packet.dart';
 import 'package:pokecard/mistery_packet/mistery_packet_repository.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -31,49 +30,41 @@ final cardListControllerProvider =
 class CardListController extends StateNotifier<AsyncValue<List<PokeCard>>> {
   final PokeCardRepository repository;
 
-  CardListController(this.repository) : super(const AsyncValue.loading()) {
-    fetchPokemonCards(); // Certifique-se de chamar o método ao inicializar
+  CardListController(this.repository) : super(const AsyncValue.data([])) {
+    saveUserData(); 
   }
 
-
-  Future <void> saveUserData() async {
+  Future<void> saveUserData() async {
     final fireStore = FirebaseFirestore.instance;
-    final userId = await getUserId(); 
+    final userId = await getUserId();
     final userPokem = fireStore.collection('pokeUsers').doc(userId);
-  
-     final snapshot = await userPokem.get();
+
+    final snapshot = await userPokem.get();
 
     if (!snapshot.exists) {
-    final currentTime = DateTime.now().millisecondsSinceEpoch;
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
 
       await userPokem.set({
-      'user_id': userId,
-      'created_at': currentTime, 
-    }, SetOptions(merge: true));
-  }
-  
-  
+        'user_id': userId,
+        'created_at': currentTime,
+      }, SetOptions(merge: true));
+    }
   }
 
   Future<void> fetchPokemonCards() async {
     try {
-     
-        final fireStore = FirebaseFirestore.instance;
-        final userId = await getUserId(); 
-        final userPokem = fireStore.collection('pokeUsers').doc(userId);
+      state = const AsyncValue.loading(); // Exibe indicador de carregamento
 
+      final fireStore = FirebaseFirestore.instance;
+      final userId = await getUserId();
+      final userPokem = fireStore.collection('pokeUsers').doc(userId);
 
       final currentTime = DateTime.now().millisecondsSinceEpoch;
 
-    // here, I'm updting the last opening time
       await userPokem.set({
         'last_open_time': currentTime
       }, SetOptions(merge: true));
 
-      print("salvando pokeuser no firebase");
-
-      
-      state = const AsyncValue.loading();
       const generalEndpoint =
           'https://pokeapi.co/api/v2/pokemon/?offset=300&limit=300';
 
@@ -102,7 +93,6 @@ class CardListController extends StateNotifier<AsyncValue<List<PokeCard>>> {
 
         final detailData = json.decode(detailResponse.body);
 
-        // Fetch color data
         final colorResponse =
             await http.get(Uri.parse(detailData['species']['url']));
         if (colorResponse.statusCode != 200) {
@@ -133,13 +123,21 @@ class CardListController extends StateNotifier<AsyncValue<List<PokeCard>>> {
     }
   }
 
-  Future<void> saveCards(List<PokeCard> cards) async {
-    try {
-      await repository.saveAllCards(cards);
-      print('Pokémon cards salvos com sucesso no Firestore!');
-    } catch (e) {
-      print('Erro ao salvar os Pokémon cards: $e');
-      rethrow;
+  Future<bool> canOpenPacket() async {
+    final fireStore = FirebaseFirestore.instance;
+    final userId = await getUserId();
+    final userDoc = fireStore.collection('pokeUsers').doc(userId);
+
+    final snapshot = await userDoc.get();
+    if (snapshot.exists && snapshot.data()!.containsKey('last_open_time')) {
+      final lastOpenTime = snapshot.data()!['last_open_time'];
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
+
+      if (currentTime - lastOpenTime < 2 * 60 * 1000) {
+        return false;  
+      }
     }
+    return true;  
   }
+
 }
