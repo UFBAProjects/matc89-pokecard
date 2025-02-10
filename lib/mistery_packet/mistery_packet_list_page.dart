@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokecard/mistery_packet/mistery_packet_list_controller.dart';
 import 'package:pokecard/mistery_packet/mistery_packet.dart';
+import 'package:pokecard/mistery_packet/mistery_packet_notification.dart';  // ✅ Importa a função de notificação
 
 class MisteryPacketListPage extends ConsumerStatefulWidget {
   const MisteryPacketListPage({super.key});
@@ -19,7 +20,7 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
     _checkPacketAvailability();
   }
 
-  // check if is allowed open a new packet
+  /// Verifica se o usuário pode abrir um novo pacote e atualiza o estado do botão
   Future<void> _checkPacketAvailability() async {
     final controller = ref.read(cardListControllerProvider.notifier);
     final canOpen = await controller.canOpenPacket();
@@ -44,20 +45,22 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
                 onPressed: isButtonEnabled
                     ? () async {
                         final controller = ref.read(cardListControllerProvider.notifier);
-
-                        
                         final canOpen = await controller.canOpenPacket();
                         if (canOpen) {
                           try {
-                            await controller.fetchPokemonCards(); 
+                            await controller.fetchPokemonCards();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Pacote aberto com sucesso! Pokémons carregados.')),
                             );
-                            
+
                             setState(() {
                               isButtonEnabled = false;
                             });
-                            Future.delayed(const Duration(hours: 2), () {
+
+                            
+                            scheduleNotificationIn2Minutes();
+
+                            Future.delayed(const Duration(minutes: 2), () {
                               setState(() {
                                 isButtonEnabled = true;
                               });
@@ -70,9 +73,8 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
                         }
                       }
                     : () {
-                        
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Aguarde os 2 minutos de abrir outro pacote.')),
+                          const SnackBar(content: Text('Aguarde 2 minutos antes de abrir outro pacote.')),
                         );
                       },
                 style: ElevatedButton.styleFrom(
