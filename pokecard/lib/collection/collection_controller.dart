@@ -21,11 +21,11 @@ class CollectionController extends StateNotifier<AsyncValue<List<PokeCard>>> {
   // Função para buscar todos os cards
   Future<void> getAllCards() async {
     try {
-      state = const AsyncValue.loading(); // Muda o estado para "loading"
-      final cards = await repository.getAllCards(); // Recupera os cards do repositório
-      state = AsyncValue.data(cards); // Atualiza o estado com os cards
+      state = const AsyncValue.loading();
+      final cards = await repository.getAllCards(); 
+      state = AsyncValue.data(cards); 
     } catch (e, st) {
-      state = AsyncValue.error(e, st); // Caso ocorra erro, atualiza o estado com erro
+      state = AsyncValue.error(e, st); 
     }
   }
 }
