@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokecard/mistery_packet/mistery_packet_list_controller.dart';
 import 'package:pokecard/mistery_packet/mistery_packet.dart';
-import 'package:pokecard/mistery_packet/mistery_packet_notification.dart';  // ✅ Importa a função de notificação
+
 
 class MisteryPacketListPage extends ConsumerStatefulWidget {
   const MisteryPacketListPage({super.key});
@@ -20,7 +20,7 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
     _checkPacketAvailability();
   }
 
-  /// Verifica se o usuário pode abrir um novo pacote e atualiza o estado do botão
+  // check if user can open a new packet, att state
   Future<void> _checkPacketAvailability() async {
     final controller = ref.read(cardListControllerProvider.notifier);
     final canOpen = await controller.canOpenPacket();
@@ -58,7 +58,7 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
                             });
 
                             
-                            scheduleNotificationIn2Minutes();
+                        
 
                             Future.delayed(const Duration(minutes: 2), () {
                               setState(() {
@@ -78,7 +78,7 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
                         );
                       },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isButtonEnabled ? Colors.grey : Colors.white,
+                  backgroundColor: isButtonEnabled ? Colors.white : Colors.grey,
                 ),
                 child: const Text('Open New Packet'),
               ),

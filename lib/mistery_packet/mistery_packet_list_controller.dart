@@ -7,6 +7,8 @@ import 'package:pokecard/mistery_packet/mistery_packet.dart';
 import 'package:pokecard/mistery_packet/mistery_packet_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 
 Future<String> getUserId() async {
   final prefs = await SharedPreferences.getInstance();
@@ -34,6 +36,10 @@ class CardListController extends StateNotifier<AsyncValue<List<PokeCard>>> {
     saveUserData(); 
   }
 
+  
+
+
+
   Future<void> saveUserData() async {
     final fireStore = FirebaseFirestore.instance;
     final userId = await getUserId();
@@ -53,7 +59,7 @@ class CardListController extends StateNotifier<AsyncValue<List<PokeCard>>> {
 
   Future<void> fetchPokemonCards() async {
     try {
-      state = const AsyncValue.loading(); // Exibe indicador de carregamento
+      state = const AsyncValue.loading(); 
 
       final fireStore = FirebaseFirestore.instance;
       final userId = await getUserId();
@@ -141,3 +147,18 @@ class CardListController extends StateNotifier<AsyncValue<List<PokeCard>>> {
   }
 
 }
+
+// notification controller
+
+class NotificationController extends StateNotifier<List<RemoteMessage>> {
+  NotificationController() : super([]);
+
+  void addNotification(RemoteMessage message) {
+    state = [...state, message];
+  }
+}
+
+final notificationProvider = StateNotifierProvider<NotificationController, List<RemoteMessage>>((ref) {
+  return NotificationController();
+});
+
