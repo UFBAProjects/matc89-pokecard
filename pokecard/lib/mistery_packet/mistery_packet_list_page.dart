@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokecard/mistery_packet/mistery_packet_list_controller.dart';
 import 'package:pokecard/mistery_packet/mistery_packet.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+
 import 'dart:async';
 
 class MisteryPacketListPage extends ConsumerStatefulWidget {
@@ -24,17 +25,21 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
     _checkPacketAvailability();
   }
 
-  Future<void> _checkPacketAvailability() async {
-    setState(() {
-      isLoading = true;
-    });
-    final controller = ref.read(cardListControllerProvider.notifier);
-    final canOpenPacket = await controller.canOpenPacket();
-    setState(() {
-      canOpen = canOpenPacket;
-      isLoading = false;
-    });
-  }
+Future<void> _checkPacketAvailability() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  final controller = ref.read(cardListControllerProvider.notifier);
+  final canOpenPacket = await controller.canOpenPacket();
+
+  if (!mounted) return;
+
+  setState(() {
+    canOpen = canOpenPacket;
+    isLoading = false;
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -50,23 +55,25 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
             onPressed: isLoading
                 ? null // Desabilita o botão se estiver carregando
                 : () async {
-                    final controller = ref.read(cardListControllerProvider.notifier);
+                    final controller =
+                        ref.read(cardListControllerProvider.notifier);
                     final canOpenPacket = await controller.canOpenPacket();
                     if (canOpenPacket) {
                       try {
                         setState(() {
-                          isLoading = true; 
+                          isLoading = true;
                         });
                         await controller.fetchPokemonCards();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Pacote aberto com sucesso! Pokémons carregados.')),
+                          const SnackBar(
+                              content: Text(
+                                  'Pacote aberto com sucesso! Pokémons carregados.')),
                         );
                         setState(() {
                           showPokemonList = true;
-                          canOpen = false; 
+                          canOpen = false;
                         });
 
-                        
                         await Future.delayed(const Duration(seconds: 30));
                         await _checkPacketAvailability();
                       } catch (e) {
@@ -75,18 +82,20 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
                         );
                       } finally {
                         setState(() {
-                          isLoading = false; 
+                          isLoading = false;
                         });
                       }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Aguarde 30 segundos antes de abrir outro pacote.')),
+                        const SnackBar(
+                            content: Text(
+                                'Aguarde 30 segundos antes de abrir outro pacote.')),
                       );
                     }
                   },
             style: ElevatedButton.styleFrom(
-              backgroundColor: !isLoading
-                  ? Colors.grey
+              backgroundColor: isLoading
+                  ? Colors.white
                   : canOpen
                       ? Colors.white
                       : Colors.grey,
@@ -132,8 +141,8 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Erro ao salvar os Pokémon cards.')),
+                      SnackBar(
+                          content: Text('Erro ao salvar os Pokémon cards: $e')),
                     );
                   }
                 }
