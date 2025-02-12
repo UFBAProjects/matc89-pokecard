@@ -14,7 +14,9 @@ class MisteryPacketListPage extends ConsumerStatefulWidget {
 }
 
 class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
-  bool isButtonEnabled = false;
+  bool canOpen = false;
+  bool showPokemonList = false;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -24,9 +26,10 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
 
   Future<void> _checkPacketAvailability() async {
     final controller = ref.read(cardListControllerProvider.notifier);
-    final canOpen = await controller.canOpenPacket();
+    final canOpenPacket = await controller.canOpenPacket();
     setState(() {
-      isButtonEnabled = canOpen;
+      canOpen = canOpenPacket;
+      isLoading = false;
     });
   }
 
@@ -41,58 +44,61 @@ class _MisteryPacketListPageState extends ConsumerState<MisteryPacketListPage> {
       body: Column(
         children: [
           ElevatedButton(
-            onPressed: isButtonEnabled
-                ? () async {
-                    final controller =
-                        ref.read(cardListControllerProvider.notifier);
-                    final canOpen = await controller.canOpenPacket();
-                    if (canOpen) {
-                      try {
-                        await controller.fetchPokemonCards();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text(
-                                  'Pacote aberto com sucesso! Pokémons carregados.')),
-                        );
-                        setState(() {
-                          isButtonEnabled = true;
-                        });
+            onPressed: isLoading
+                ? null
+                : canOpen
+                    ? () async {
+                        final controller = ref.read(cardListControllerProvider.notifier);
+                        final canOpenPacket = await controller.canOpenPacket();
+                        if (canOpenPacket) {
+                          try {
+                            await controller.fetchPokemonCards();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Pacote aberto com sucesso! Pokémons carregados.')),
+                            );
+                            setState(() {
+                              showPokemonList = true;
+                              canOpen = false;
+                            });
 
-                        Future.delayed(const Duration(minutes: 2), () async {
-                          await _checkPacketAvailability();
-                        });
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Erro ao abrir pacote: $e')),
-                        );
+                            await Future.delayed(const Duration(seconds: 30));
+                            await _checkPacketAvailability();
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Erro ao abrir pacote: $e')),
+                            );
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Aguarde 30 segundos antes de abrir outro pacote.')),
+                          );
+                        }
                       }
-                    }
-                  }
-                : () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text(
-                              'Aguarde 30 segundos antes de abrir outro pacote.')),
-                    );
-                  },
+                    : () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Aguarde 30 segundos antes de abrir outro pacote.')),
+                        );
+                      },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: isLoading ? Colors.grey : canOpen ? Colors.white : Colors.grey,
             ),
             child: const Text('Open New Packet'),
           ),
           const SizedBox(height: 20),
-          cardListAsyncValue.when(
-            data: (cardList) {
-              if (cardList.isEmpty) {
-                return const Text(
-                  'Nenhum Pokémon carregado. Clique no botão para abrir um novo pacote.',
-                  textAlign: TextAlign.center,
-                );
-              }
-              return Expanded(child: _buildList(context, cardList));
-            },
-            loading: () => const CircularProgressIndicator(),
-            error: (error, stackTrace) => Text('Erro: $error'),
+          Expanded(
+            child: cardListAsyncValue.when(
+              data: (cardList) {
+                if (cardList.isEmpty || !showPokemonList) {
+                  return const Text(
+                    'Nenhum Pokémon carregado. Clique no botão para abrir um novo pacote.',
+                    textAlign: TextAlign.center,
+                  );
+                }
+                return _buildList(context, cardList);
+              },
+              loading: () => const CircularProgressIndicator(),
+              error: (error, stackTrace) => Text('Erro: $error'),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
